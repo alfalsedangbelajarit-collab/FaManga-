@@ -1,0 +1,44 @@
+name: Build Famanga Mihon APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "famanga-mihon.zip"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          unzip -q famanga-mihon.zip -d source
+          test -f source/mihon-main/gradlew
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build APK
+        working-directory: source/mihon-main
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease -Pdist=ci
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Famanga-Mihon-APK
+          path: source/mihon-main/app/build/outputs/apk/release/app-arm64-v8a-release.apk: source/mihon-main/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 7
+          
